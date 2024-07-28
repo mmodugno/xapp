@@ -25,11 +25,7 @@ func CreateRouter() *chi.Mux {
 	//route adds a path
 	router.Route("/api", func(r chi.Router) {
 		router.Get("/healthcheck", HealthCheck)
-		router.Post("/todos/create", CreateTodo)
-		router.Get("/todos", GetTodos)
-		router.Get("/todos/{id}", GetTodoById)
-		router.Put("/todos/{id}", UpdateTodo)
-		router.Delete("/todos/{id}", DeleteTodo)
+		router.Post("/users", PostUser)
 	})
 	return router
 }

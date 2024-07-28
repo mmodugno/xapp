@@ -12,7 +12,7 @@ import (
 )
 
 type Application struct {
-	Models services.Todo
+	//Models services.Todo
 }
 
 func main() {
