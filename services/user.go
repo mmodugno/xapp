@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
+	"log"
+	"slices"
 	"time"
 )
 
@@ -14,17 +15,7 @@ type User struct {
 	Username  string    `json:"username" bson:"username"`
 	CreatedAt time.Time `json:"created_at,omitempty" bson:"created_at,omitempty"`
 	UpdatedAt time.Time `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
-}
-
-var client *mongo.Client
-
-func New(mongo *mongo.Client) User {
-	client = mongo
-	return User{}
-}
-
-func CollectionPointer(collection string) *mongo.Collection {
-	return client.Database("xapp_db").Collection(collection)
+	Following []string  `json:"following,omitempty" bson:"following,omitempty"`
 }
 
 func (u *User) InsertUser(entry User) error {
@@ -74,4 +65,70 @@ func (u *User) GetUserByUsername(username string) (User, error) {
 		return User{}, err
 	}
 	return user, nil
+}
+
+func (u *User) Delete(id string) error {
+	c := CollectionPointer("users")
+
+	mongoID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = c.DeleteOne(context.Background(), bson.M{"_id": mongoID})
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (u *User) FollowUser(id string, username string) error {
+	c := CollectionPointer("users")
+
+	//Get user information
+	user, err := u.GetUserByID(id)
+	if err != nil {
+		return fmt.Errorf("cannot get logged user: %s", err.Error())
+	}
+	f := user.Following
+
+	//get ID of username received
+	follow, err := u.GetUserByUsername(username)
+	if err != nil {
+		return fmt.Errorf("cannot get user: %s", err.Error())
+	}
+
+	//checks if it already follows
+	if slices.Contains(f, follow.ID) {
+		return fmt.Errorf("already following user")
+	}
+
+	//add following username to following var
+	f = append(f, follow.ID)
+	mongoID, err := primitive.ObjectIDFromHex(id)
+
+	update := bson.D{
+		{"$set", bson.D{
+			{"following", f},
+		}},
+	}
+
+	_, err = c.UpdateOne(
+		context.Background(),
+		bson.M{"_id": mongoID},
+		update,
+	)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (u *User) getFollowing(id string) ([]string, error) {
+	user, err := u.GetUserByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return user.Following, nil
 }

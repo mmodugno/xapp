@@ -26,6 +26,12 @@ func CreateRouter() *chi.Mux {
 	router.Route("/api", func(r chi.Router) {
 		router.Get("/healthcheck", HealthCheck)
 		router.Post("/users", PostUser)
+		router.Get("/users/{id}", GetUserByID)
+		router.Delete("/users", DeleteUser)
+		router.Post("/users/follow/{username}", FollowUser)
+		router.Post("/tweets", PostTweet)
+		router.Get("/tweets", GetTweets)
+		router.Get("/timeline", GetTimeline)
 	})
 	return router
 }

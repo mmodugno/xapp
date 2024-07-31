@@ -3,9 +3,16 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"net/http"
 	"x-app-go/services"
 )
+
+func ResponseBuilder(w http.ResponseWriter, r Response) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(r.Code)
+	json.NewEncoder(w).Encode(r)
+}
 
 // PostUser : creates a new user
 func PostUser(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +27,7 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = validateNewUser(w, user)
+	err = validateNewUser(user)
 	if err != nil {
 		ResponseBuilder(w, Response{
 			Msg:  err.Error(),
@@ -49,13 +56,7 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func ResponseBuilder(w http.ResponseWriter, r Response) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(r.Code)
-	json.NewEncoder(w).Encode(r)
-}
-
-func validateNewUser(w http.ResponseWriter, user services.User) error {
+func validateNewUser(user services.User) error {
 	switch user.Username {
 	case "":
 		return fmt.Errorf("empty username")
@@ -64,4 +65,89 @@ func validateNewUser(w http.ResponseWriter, user services.User) error {
 	}
 
 	return nil
+}
+
+func GetUserByID(w http.ResponseWriter, r *http.Request) {
+	var user services.User
+	id := chi.URLParam(r, "id")
+
+	if id == "" {
+		ResponseBuilder(w, Response{
+			Msg:  "please provide an ID",
+			Code: http.StatusBadRequest,
+		})
+		return
+	}
+	user, err := user.GetUserByID(id)
+	if err != nil {
+		ResponseBuilder(w, Response{
+			Msg:  err.Error(),
+			Code: http.StatusNotFound,
+		})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(user)
+	return
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	var user services.User
+	id := r.Header.Get("id")
+
+	if id == "" {
+		ResponseBuilder(w, Response{
+			Msg:  "please provide an ID",
+			Code: http.StatusBadRequest,
+		})
+		return
+	}
+	err := user.Delete(id)
+	if err != nil {
+		ResponseBuilder(w, Response{
+			Msg:  err.Error(),
+			Code: http.StatusInternalServerError,
+		})
+		return
+	}
+	res := Response{
+		Msg:  "Successfully deleted",
+		Code: http.StatusOK,
+	}
+	ResponseBuilder(w, res)
+
+	return
+}
+
+func FollowUser(w http.ResponseWriter, r *http.Request) {
+	var user services.User
+	//Get ID from user, and username of the user to follow
+	id := r.Header.Get("id")
+	username := chi.URLParam(r, "username")
+
+	if username == "" {
+		ResponseBuilder(w, Response{
+			Msg:  "please provide an username",
+			Code: http.StatusBadRequest,
+		})
+		return
+	}
+
+	err := user.FollowUser(id, username)
+	if err != nil {
+		ResponseBuilder(w, Response{
+			Msg:  err.Error(),
+			Code: http.StatusInternalServerError,
+		})
+		return
+	}
+	res := Response{
+		Msg:  "Successfully followed",
+		Code: http.StatusOK,
+	}
+	ResponseBuilder(w, res)
+
+	return
 }
