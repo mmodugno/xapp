@@ -9,7 +9,7 @@ down:
 	docker-compose down
 
 build:
-	go build -o ${BINARY} ./cmd/api/
+	go build -o ${BINARY} ./cmd/
 
 start:
 	@env MONGO_DB_USERNAME=${MONGO_DB_USERNAME} MONGO_DB_PASSWORD=${MONGO_DB_PASSWORD} ./${BINARY}

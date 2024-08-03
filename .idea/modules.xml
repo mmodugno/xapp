@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/simple-crud.iml" filepath="$PROJECT_DIR$/.idea/simple-crud.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/xapp.iml" filepath="$PROJECT_DIR$/.idea/xapp.iml" />
     </modules>
   </component>
 </project>
