@@ -6,7 +6,7 @@ type Mock struct {
 	mock.Mock
 }
 
-func (u *Mock) InsertUser(id string) error {
+func (u *Mock) InsertUser(username string) (string, error) {
 	//TODO implement me
 	panic("implement me")
 }

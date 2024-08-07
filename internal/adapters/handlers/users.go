@@ -36,7 +36,7 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = user.InsertUser(user.Username)
+	id, err := user.InsertUser(user.Username)
 
 	if err != nil {
 		res := Response{
@@ -47,11 +47,10 @@ func PostUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := Response{
-		Msg:  fmt.Sprintf("created user with username: %s", user.Username),
+	ResponseBuilder(w, Response{
+		Msg:  fmt.Sprintf("created user with username: %s and id: %s", user.Username, id),
 		Code: http.StatusCreated,
-	}
-	ResponseBuilder(w, res)
+	})
 
 	return
 }

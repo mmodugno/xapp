@@ -16,13 +16,18 @@ type TimelineOfUser struct {
 	Tweets []tweets.Tweet `json:"tweets"`
 }
 
-func (tm *Timeline) GetTimeline(id string) (*TimelineOfUser, error) {
+func New() *Timeline {
+	return &Timeline{
+		User:  &users.User{},
+		Tweet: &tweets.Tweet{},
+	}
+}
 
+func (tm *Timeline) GetTimeline(id string) (*TimelineOfUser, error) {
 	following, err := tm.User.GetFollowing(id)
 	if err != nil {
 		return nil, err
 	}
-
 	var tweets []tweets.Tweet
 
 	for _, value := range following {
@@ -33,10 +38,9 @@ func (tm *Timeline) GetTimeline(id string) (*TimelineOfUser, error) {
 		tweets = append(tweets, ts...)
 		println(tweets)
 	}
-
 	//sort tweets by created at
 	sort.Slice(tweets, func(i, j int) bool {
-		return tweets[i].CreatedAt.Before(tweets[j].CreatedAt)
+		return tweets[i].CreatedAt.After(tweets[j].CreatedAt)
 	})
 
 	return &TimelineOfUser{

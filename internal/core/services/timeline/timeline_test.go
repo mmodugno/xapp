@@ -13,7 +13,6 @@ func Test_Timeline_GetTimeline(t *testing.T) {
 		id string
 	}
 	time := time.Now()
-	//var empty []string
 
 	tests := []struct {
 		name       string
@@ -58,7 +57,7 @@ func Test_Timeline_GetTimeline(t *testing.T) {
 			wantErr: assert.NoError,
 		},
 		{
-			name: "given an user with 2 following should return those tweets in order of createdDate",
+			name: "given an user with 2 following should return those tweets in recent order of createdDate",
 			args: args{
 				id: "123",
 			},
@@ -80,9 +79,9 @@ func Test_Timeline_GetTimeline(t *testing.T) {
 				want := &TimelineOfUser{
 					UserID: "123",
 					Tweets: []tweets.Tweet{
-						{ID: "tweet 1 usuario 2", CreatedAt: time.AddDate(0, 0, -1)},
-						{ID: "tweet 2 del usuario 1", CreatedAt: time},
 						{ID: "tweet 1 usuario 1", CreatedAt: time.AddDate(0, 0, 1)},
+						{ID: "tweet 2 del usuario 1", CreatedAt: time},
+						{ID: "tweet 1 usuario 2", CreatedAt: time.AddDate(0, 0, -1)},
 					},
 				}
 				return assert.EqualValues(t, want, got)

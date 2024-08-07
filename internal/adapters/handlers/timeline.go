@@ -8,8 +8,7 @@ import (
 
 func GetTimeline(w http.ResponseWriter, r *http.Request) {
 	id := r.Header.Get("id")
-	var timeline timeline.Timeline
-
+	timeline := timeline.New()
 	if id == "" {
 		ResponseBuilder(w, Response{
 			Msg:  "please provide an ID",

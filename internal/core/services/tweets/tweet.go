@@ -4,34 +4,29 @@ import (
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 	"x-app-go/internal/core/services"
 )
 
-type TweetModel struct {
+type Tweet struct {
 	ID        string    `json:"id,omitempty" bson:"_id,omitempty"`
 	Content   string    `json:"content"`
 	UserID    string    `json:"user_id"`
 	CreatedAt time.Time `json:"created_at" bson:"created_at"`
 }
 
-type Tweet struct {
-	Collection *mongo.Client
-}
-
 type Client interface {
-	InsertTweet(id string, entry TweetModel) error
-	GetTweetsOfUser(userID string) ([]TweetModel, error)
+	InsertTweet(id string, entry Tweet) error
+	GetTweetsOfUser(userID string) ([]Tweet, error)
 }
 
-func (t *Tweet) InsertTweet(id string, entry TweetModel) error {
+func (t *Tweet) InsertTweet(id string, entry Tweet) error {
 	c := services.CollectionPointer("tweets")
 
 	now := time.Now()
 
-	_, err := c.InsertOne(context.TODO(), TweetModel{
+	_, err := c.InsertOne(context.TODO(), Tweet{
 		Content:   entry.Content,
 		UserID:    id,
 		CreatedAt: now,
@@ -43,9 +38,9 @@ func (t *Tweet) InsertTweet(id string, entry TweetModel) error {
 	return nil
 }
 
-func (t *Tweet) GetTweetsOfUser(userID string) ([]TweetModel, error) {
-	c := t.Collection.Database("xapp_db").Collection("tweets")
-	var tweets []TweetModel
+func (t *Tweet) GetTweetsOfUser(userID string) ([]Tweet, error) {
+	c := services.CollectionPointer("tweets")
+	var tweets []Tweet
 
 	sort := bson.D{{"created_at", 1}}
 	opts := options.Find().SetSort(sort)

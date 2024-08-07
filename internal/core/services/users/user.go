@@ -21,7 +21,7 @@ type User struct {
 }
 
 type Client interface {
-	InsertUser(username string) error
+	InsertUser(username string) (string, error)
 	GetUserByID(id string) (User, error)
 	GetUserByUsername(username string) (User, error)
 	Delete(id string) error
@@ -29,35 +29,35 @@ type Client interface {
 	GetFollowing(id string) ([]string, error)
 }
 
-func (u *User) InsertUser(username string) error {
+func (u *User) InsertUser(username string) (string, error) {
 	c := services.CollectionPointer("users")
 
 	now := time.Now()
 
-	usernameConvention := "^(?=[a-zA-Z0-9._]{8,20}$)(?!.*[_.]{2})[^_.].*[^_.]$"
-	re, err := regexp.MatchString(usernameConvention, username)
+	err := checkUsername(username)
 	if err != nil {
-		fmt.Errorf("cannot analize username")
-	}
-	if !re {
-		fmt.Errorf("not a valid username")
+		return "", err
 	}
 
 	_, err = u.GetUserByUsername(username)
 	if err == nil {
-		return fmt.Errorf("username is already used")
+		return "", fmt.Errorf("username is already used")
 	}
 
-	_, err = c.InsertOne(context.TODO(), User{
+	result, err := c.InsertOne(context.TODO(), User{
 		Username:  username,
 		CreatedAt: now,
 		UpdatedAt: now,
 	})
 	if err != nil {
 		fmt.Println("error when creating user: ", err)
-		return err
+		return "", err
 	}
-	return nil
+
+	id := result.InsertedID.(primitive.ObjectID)
+	idString := id.Hex()
+
+	return idString, nil
 }
 
 func (u *User) GetUserByID(id string) (User, error) {
@@ -146,9 +146,21 @@ func (u *User) FollowUser(id string, username string) error {
 }
 
 func (u *User) GetFollowing(id string) ([]string, error) {
+	log.Print("get following")
 	user, err := u.GetUserByID(id)
 	if err != nil {
 		return nil, err
 	}
+	log.Print(user.Following)
 	return user.Following, nil
+}
+
+func checkUsername(username string) error {
+	usernameConvention := `^[a-z_]([a-z0-9_-]{0,20}|[a-z0-9_-]{0,20}\$)$`
+
+	re := regexp.MustCompile(usernameConvention).MatchString
+	if !re(username) {
+		return fmt.Errorf("invalid username")
+	}
+	return nil
 }
